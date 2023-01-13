@@ -5,16 +5,12 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>basic-chat</title>
 		<script src="socket.io/socket.io.js"></script>
-		<script src="index.js"></script>
+		<script type = "module" src="index.js"></script>
 
 	</head>
 	<body>
-		<ul id="chat">
-			<li>hello</li>
-			<li>bye</li>
-			<li>lol</li>
-		</ul>
-		<input type="text" id="message">
-		<button onclick="sendMessage();">send</button>
+		<ul style="list-style-type: none;" id="chat"></ul>
+		<div contenteditable style="border: 1px solid black; width: 200px; display: inline-block;" id="message-text"></div>
+		<button id="send-message">send</button>
 	</body>
 </html>

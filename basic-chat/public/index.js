@@ -1,14 +1,55 @@
-const socket = io();
+import {Message} from "./message.js";
 
-function sendMessageToServer(message) {
-    socket.emit("new message", message);
+let chatList;
+let messageTextInput;
+let sendMessageButton;
+
+window.onload = () => {
+    chatList = document.getElementById("chat");
+    messageTextInput = document.getElementById("message-text");
+    sendMessageButton = document.getElementById("send-message");
+
+    sendMessageButton.onclick = sendMessage;
+    window.onkeyup = event => {
+        if(event.code == "Enter" && event.shiftKey == false && document.activeElement == messageTextInput) {
+            sendMessage();
+        }
+    };
 }
 
-function writeMessage(message) {
-    let messageList = document.getElementById("chat");
+function sendMessage() {
+    sendMessageToServer(messageTextInput.innerText);
+    messageTextInput.innerText = "";
+}
+
+function clearChatList() {
+    chatList.innerHTML = "";
+}
+
+function writeMessageToChatList(message) {
     let li = document.createElement("li");
-    li.innerText = message;
-    messageList.appendChild(li);
+
+    let detailP = document.createElement('p');
+    detailP.style = "fontSize: small; color: gray;";
+    detailP.innerText = message.user + " at " + new Date(message.time).toLocaleTimeString() + ":";
+
+    let textP = document.createElement('p');
+    textP.innerText = message.text;
+    textP.style = "word-break: break-word; white-space: normal;";
+
+    li.append(detailP, textP);
+    chatList.append(li);
+}
+
+
+const socket = io();
+
+function sendMessageToServer(text) {
+    let message = new Message();
+    message.text = text;
+    message.user = socket.id;
+    messageTextInput.focus();
+    socket.emit("new message", message);
 }
 
 socket.on("connect", () => {
@@ -16,11 +57,11 @@ socket.on("connect", () => {
 });
 
 socket.on("chat history", history => {
-    for(message of history) {
-        writeMessage(message);
+    for(let message of history) {
+        writeMessageToChatList(message);
     }
 });
 
 socket.on("new message", message => {
-    writeMessage(message);
+    writeMessageToChatList(message);
 });
