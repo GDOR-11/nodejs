@@ -1,42 +1,56 @@
-import {Message} from "./public/message.js";
-
-
-import http from "http";
-import fs from "fs"
-import mime from "mime-types";
+import {standardGetRequestListener, standardEJSgetRequestListener, standardRedirectRequestListener} from "./standardListeners.js";
+import {processEJSfile} from "./fileManagement.js";
+import {readRequestBody, sendUnsuccessfulResponse} from "./requestResponseUtils.js";
 import socketio from "socket.io";
+import http from "http";
+
+
 
 const requestListeners = {
-    "GET": (req, res) => {
-        if(req.url == "/") req.url = "/index.html";
-        res.setHeader("Content-Type", mime.lookup(req.url));
-        fs.readFile("public" + req.url, (err, data) => {
-            if(err) {
-                console.error("Could not read file \"public" + req.url + "\".\nError message:\n\n" + err + "\n\n");
-                res.setHeader("Status", 404);
-                res.end("No such file you dumbass");
+    GET: {
+        "/login": standardEJSgetRequestListener("public/login.ejs"),
+        "/index.js": standardGetRequestListener("public/index.js"),
+        "/message.js": standardGetRequestListener("public/message.js"),
+        "/": standardRedirectRequestListener("/login")
+    },
+    POST: {
+        "/": async (req, res) => {
+            let requestBody = await readRequestBody(req);
+            if(requestBody == null) {
+                sendUnsuccessfulResponse(res, 400);
                 return;
             }
-            res.end(data);
-        });
+        
+            // turn request body into an object
+            let requestBodyData = Object.fromEntries(new URLSearchParams(requestBody));
+        
+            let processedFile = await processEJSfile("public/index.ejs", requestBodyData);
+            if(processedFile == null) {
+                sendUnsuccessfulResponse(res, 400);
+                return;
+            }
+        
+            res.end(processedFile);
+        }
     }
-}
+};
 
 const server = http.createServer((req, res) => {
     if(!requestListeners[req.method]) {
-        // do something lol
-        res.end();
+        sendUnsuccessfulResponse(res, 400);
         return;
     }
-    requestListeners[req.method](req, res);
+    if(!requestListeners[req.method][req.url]) {
+        sendUnsuccessfulResponse(res, 404);
+        return;
+    }
+    requestListeners[req.method][req.url](req, res);
 });
+
 
 const sockets = socketio(server);
 
-
-
 const chatHistory = [];
-
 
 sockets.on("connection", socket => {
     console.log(socket.id + " connected");
@@ -52,23 +66,4 @@ sockets.on("connection", socket => {
 });
 
 
-server.listen(3000, () => {
-    console.log("Server listening on port 3000");
-});
-
-// import express from "express";
-// import http from "http";
-// import socketio from "socket.io";
-
-// const app = express();
-// const server = http.createServer(app);
-// const sockets = socketio(server);
-
-// app.use(express.static("public"));
-
-
-
-
-// server.listen(3000, () => {
-//     console.log("Server listening on port 3000");
-// });
+server.listen(3000);

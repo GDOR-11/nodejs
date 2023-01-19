@@ -47,13 +47,13 @@ const socket = io();
 function sendMessageToServer(text) {
     let message = new Message();
     message.text = text;
-    message.user = socket.id;
+    message.user = username;
     messageTextInput.focus();
     socket.emit("new message", message);
 }
 
 socket.on("connect", () => {
-    console.log("Connected with ID " + socket.id);
+    console.log(`Connected with ID ${socket.id} and username ${username}`);
 });
 
 socket.on("chat history", history => {
