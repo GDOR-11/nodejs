@@ -50,16 +50,22 @@ const server = http.createServer((req, res) => {
 
 const sockets = socketio(server);
 
+const usernames = {};
 const chatHistory = [];
 
 sockets.on("connection", socket => {
-    console.log(socket.id + " connected");
+    socket.on("username", username => {
+        usernames[socket.id] = username;
+    });
 
     socket.emit("chat history", chatHistory);
 
-    socket.on("new message", message => {
+    socket.on("new message", messageText => {
+        let message = new Message();
+        message.text = messageText.trim();
+        message.user = usernames[socket.id];
         message.time = new Date().getTime();
-        message.text = message.text.trim();
+
         chatHistory.push(message);
         sockets.emit("new message", message);
     });
