@@ -27,11 +27,17 @@ function clearChatList() {
 }
 
 function writeMessageToChatList(message) {
+    let time_str = new Date(message.time).toLocaleTimeString();
+
     let li = document.createElement("li");
 
     let detailP = document.createElement('p');
-    detailP.style = "fontSize: small; color: gray;";
-    detailP.innerText = message.user + " at " + new Date(message.time).toLocaleTimeString() + ":";
+    detailP.innerHTML = `
+        <span style="color: grey;">message sent by</span>
+        <span>${username}</span>
+        <span style="color: grey;">at</span>
+        <span>${time_str}</span>
+    `;
 
     let textP = document.createElement('p');
     textP.innerText = message.text;
