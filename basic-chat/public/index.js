@@ -23,8 +23,7 @@ function clearChatList() {
 
 function writeMessageToChatList(message) {
     let li = document.createElement("li");
-    console.log(message);
-    message.toHTML(li);
+    Message.toHTML(li, message);
     chatList.append(li);
 }
 
@@ -40,7 +39,7 @@ function sendMessageToServer(text) {
 
 const socket = io();
 
-socket.on("connection", () => {
+socket.on("connect", () => {
     socket.emit("username", username);
 });
 

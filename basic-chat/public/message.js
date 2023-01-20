@@ -5,19 +5,22 @@ export default class Message {
         this.time = time;
     }
 
-    toHTML(wrapper) {
-        let time_str = new Date(this.time).toLocaleTimeString();
+    static toHTML(wrapper, message) {
+        let time_str = new Date(message.time).toLocaleTimeString();
 
         let detailDiv = document.createElement("div");
         detailDiv.innerHTML = `<span style="color: grey;">message sent by</span>
-            <span>${this.user}</span>
+            <span>${message.user}</span>
             <span style="color: grey;">at</span>
             <span>${time_str}</span>`;
 
         let textP = document.createElement("p");
         textP.style = "word-break: break-word; white-space: normal;";
-        textP.innerText = text;
+        textP.innerText = message.text;
 
         wrapper.append(detailDiv, textP);
+    }
+    toHTML(wrapper) {
+        Message.toHTML(wrapper, this);
     }
 };
