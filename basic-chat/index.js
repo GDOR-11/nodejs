@@ -1,3 +1,4 @@
+import Message from "./public/message.js";
 import {standardGetRequestListener, standardEJSgetRequestListener, standardRedirectRequestListener} from "./standardListeners.js";
 import {processEJSfile} from "./fileManagement.js";
 import {readRequestBody, sendUnsuccessfulResponse} from "./requestResponseUtils.js";
