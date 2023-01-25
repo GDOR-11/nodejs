@@ -21,12 +21,17 @@ export function readRequestBody(req) {
 }
 
 /**
- * sends a default HTTP error code HTML page to the user
+ * sends a default HTTP error code HTML page to the client
+ * @example
+ * // assuming res is the appropriate ServerResponse object to send to the client
+ * 
+ * // sends a readable and decently pretty HTML page to the client
+ * sendUnsuccessfulResponse(res, 404, "Sorry, that page does not exist");
  * @param {ServerResponse} res - response object in which to send the HTML page
  * @param {number} errorCode - the error code
- * @param {string} [message = ""] - optional message to the user
+ * @param {string} [message = ""] - optional message to the client
  */
-export function sendUnsuccessfulResponse(res, errorCode, message) {
+export function sendUnsuccessfulResponse(res, errorCode, message = "") {
     processEJSfile("public/error.ejs", {errorCode, message}).then(processedFile => {
         res.statusCode = errorCode;
         res.setHeader("content-type", "text/html");

@@ -6,9 +6,40 @@
 		<title>basic-chat</title>
 	</head>
 	<body>
-        <form action="/" method="POST">
-            <input id="username" name="username" placeholder="username">
+		<h3 id="message-h3" style="display: none; background-color: rgba(255, 0, 0, 0.5); padding: 0em 0.3em; margin: 0.7em 0em;"></h3>
+        <form id="username_form" autocomplete="off">
+            <input id="username_input" name="username" placeholder="username">
             <button>go!</button>
         </form>
+		
+		<script>
+			function showErrorMessage(message) {
+				message_h3.style.display = "inline-block";
+				message_h3.innerText = message;
+			}
+			const username_form = document.getElementById("username_form");
+			const username_input = document.getElementById("username_input");
+			const message_h3 = document.getElementById("message-h3");
+			username_form.onsubmit = async event => {
+				event.preventDefault();
+				if(username_input.value.trim() == "") {
+					showErrorMessage("Username cannot be empty.");
+					return;
+				}
+				const response = await fetch(`/checkUsername?username=${username_input.value}`);
+				const responseData = await response.json();
+				if(responseData.valid == true) {
+					const redirect_form = document.createElement("form");
+					redirect_form.action = "/";
+					redirect_form.method = "post";
+					redirect_form.style.display = "none";
+					redirect_form.innerHTML = `<input name="username" value="${username_input.value}">`;
+					document.body.appendChild(redirect_form);
+					redirect_form.submit();
+				} else {
+					showErrorMessage(responseData.message);
+				}
+			}
+		</script>
 	</body>
 </html>

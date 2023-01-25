@@ -1,7 +1,11 @@
-import Message from "./message.js";
+import {messageToHTML} from "./message.js";
 
+
+/** @type {HTMLUListElement} */
 let chatList;
+/** @type {HTMLSpanElement} */
 let messageTextInput;
+/** @type {HTMLButtonElement} */
 let sendMessageButton;
 
 window.onload = () => {
@@ -9,34 +13,46 @@ window.onload = () => {
     messageTextInput = document.getElementById("message-text");
     sendMessageButton = document.getElementById("send-message");
 
-    sendMessageButton.onclick = sendMessage;
+    sendMessageButton.onclick = event => {
+        sendMessageToServer(messageTextInput.innerText);
+        messageTextInput.innerText = "";
+        messageTextInput.focus();
+    };
     window.onkeyup = event => {
         if(event.code == "Enter" && event.shiftKey == false && document.activeElement == messageTextInput) {
-            sendMessage();
+            sendMessageToServer(messageTextInput.innerText);
+            messageTextInput.innerText = "";
+            messageTextInput.focus();
         }
     };
 }
 
+/**
+ * erase all messages from {@link chatList}
+ */
 function clearChatList() {
     chatList.innerHTML = "";
 }
 
+/**
+ * insert another message into {@link chatList}
+ * @param {import("./message.js").Message} message the message to insert
+ */
 function writeMessageToChatList(message) {
     let li = document.createElement("li");
-    Message.toHTML(li, message);
+    messageToHTML(message, li);
     chatList.append(li);
 }
 
-function sendMessage() {
-    sendMessageToServer(messageTextInput.innerText);
-    messageTextInput.innerText = "";
-}
-
+/**
+ * send a message to the server
+ * @param {string} text the text of the message to send
+ */
 function sendMessageToServer(text) {
-    messageTextInput.focus();
     socket.emit("new message", text);
 }
 
+/** @type {Server} */
 const socket = io();
 
 socket.on("connect", () => {

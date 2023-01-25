@@ -1,6 +1,8 @@
+import {usernames} from "./dataManagement.js";
+
 /**
  * the possible errors that any given username can have
- * @const
+ * @const {Object}
  * @enum {symbol}
  * @property {symbol} valid - the username is valid
  * @property {symbol} taken - the username is already taken
@@ -25,12 +27,24 @@ export const UsernameStatusCodeMessages = Object.freeze({
     [UsernameStatusCodes.empty]: "The username cannot be empty.",
 });
 
-// TODO: why "const UsernameStatusCodeMessages: any"??? why the any??? research.
-
-
 
 /**
  * checks if the given username is valid
+ * @example
+ * 
+ * // returns UsernameStatusCodes.empty
+ * checkUsername("");
+ * 
+ * // returns UsernameStatusCodes.valid
+ * checkUsername("robert");
+ * 
+ * // returns UsernameStatusCodes.valid
+ * checkUsername("robert");
+ * 
+ * addUserToDatabase("gHuthgYFv-AAAAC", "robert");
+ * 
+ * // returns UsernameStatusCodes.taken
+ * checkUsername("robert");
  * @param {string} username
  * @returns {UsernameStatusCodes} username status
  */
@@ -48,4 +62,15 @@ export function checkUsername(username) {
         return UsernameStatusCodes.empty;
     }
     return UsernameStatusCodes.valid;
+}
+
+/**
+ * adds an user to the user database (currentyl just the usernames object)
+ * @example
+ * addUserToDatabase("gHuthgYFv-AAAAC", "robert");
+ * @param {string} socketID 
+ * @param {string} username 
+ */
+function addUserToDatabase(socketID, username) {
+    usernames[socketID] = username;
 }

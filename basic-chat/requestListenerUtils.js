@@ -14,6 +14,8 @@ import mime from "mime";
 
 /**
  * it's a RequestListener factory
+ * @example
+ * requestListeners["GET /staticEJSpage"] = standardEJSgetRequestListener("/someEJSfile.ejs", {exampleData: "some data"});
  * @param {string} filePath - the path to the EJS file
  * @param {ejs.Data} [EJSdata] - the data to be given to the EJS file
  * @param {ejs.Options & {async: false;}} [EJSoptions] - EJS options (see https://ejs.co/#docs)
@@ -31,6 +33,8 @@ export function standardEJSgetRequestListener(filePath, EJSdata, EJSoptions) {
 
 /**
  * it's a RequestListener factory
+ * @example
+ * requestListeners["GET /staticPage"] = standardGetRequestListener("/someFile.idk");
  * @param {string} filePath - the path to the file
  * @returns {RequestListener} - RequestListener that responds with a static preread file
  */
@@ -47,6 +51,8 @@ export function standardGetRequestListener(filePath) {
 
 /**
  * it's a RequestListener factory
+ * @example
+ * requestListeners["GET /pageThatRedirectsToAnotherPage"] = standardRedirectRequestListener("/AnotherPage");
  * @param {string} url - the url to redirect to
  * @returns {RequestListener} - RequestListener that responds with a redirect to the specified url
  */
