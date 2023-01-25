@@ -6,6 +6,8 @@ import http, { Server } from "http";
 import {checkUsername, UsernameStatusCodes, UsernameStatusCodeMessages} from "./usernameManagement.js";
 import querystring from "querystring";
 import {usernames, chatHistory} from "./dataManagement.js";
+import readline from "readline/promises";
+import {stdin, stdout} from "process";
 
 /**
  * the request listeners for every valid METHOD and URL (acess requestListeners[`${METHOD} ${URL}`] to get the appropriate request listener)
@@ -98,6 +100,16 @@ sockets.on("connection", socket => {
 });
 
 
-server.listen(3000, () => {
+server.listen(3000, async () => {
     console.log("server listening on port 3000");
+    const rl = readline.createInterface({input: stdin, output: stdout});
+    while(true) {
+        const answer = await rl.question("> ");
+        try {
+            const output = (() => eval(answer))();
+            console.log(output);
+        } catch(error) {
+            console.error(error);
+        }
+    }
 });
