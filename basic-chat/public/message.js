@@ -1,5 +1,6 @@
 /**
  * @typedef {Object} Message object that carries the information of a message
+ * @property {number} id the id of the message
  * @property {string} text the text of the message
  * @property {string} user the user that sent the message
  * @property {number} time when the message was sent, measured in milliseconds since january 1st 1970 UTC (see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getTime)

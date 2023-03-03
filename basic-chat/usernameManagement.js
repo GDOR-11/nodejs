@@ -1,12 +1,10 @@
-import {usernames} from "./dataManagement.js";
+import * as database from "./database.js";
 
 /**
  * the possible errors that any given username can have
  * @const {Object}
  * @enum {symbol}
- * @property {symbol} valid - the username is valid
- * @property {symbol} taken - the username is already taken
- * @property {symbol} empty - the username is empty
+ * @default
  */
 export const UsernameStatusCodes = Object.freeze({
     /** the username is valid */
@@ -20,13 +18,13 @@ export const UsernameStatusCodes = Object.freeze({
 /**
  * maps UsernameStatusCodes to comprehensible sentences for the user
  * @const {Object}
+ * @default
  */
 export const UsernameStatusCodeMessages = Object.freeze({
     [UsernameStatusCodes.valid]: "Username is valid.",
     [UsernameStatusCodes.taken]: "Sorry, that username is already taken, try another one.",
     [UsernameStatusCodes.empty]: "The username cannot be empty.",
 });
-
 
 /**
  * checks if the given username is valid
@@ -49,28 +47,24 @@ export const UsernameStatusCodeMessages = Object.freeze({
  * @returns {UsernameStatusCodes} username status
  */
 export function checkUsername(username) {
-    if(username != username.trim()) {
-        console.warn("Don't forget to trim the username");
-        username = username.trim();
-    }
-    for(let id in usernames) {
-        if(usernames[id] == username.trim()) {
-            return UsernameStatusCodes.taken;
+    return new Promise((resolve, reject) => {
+        if(username != username.trim()) {
+            console.warn("Don't forget to trim the username!");
+            username = username.trim();
         }
-    }
-    if(username == "") {
-        return UsernameStatusCodes.empty;
-    }
-    return UsernameStatusCodes.valid;
-}
-
-/**
- * adds an user to the user database (currentyl just the usernames object)
- * @example
- * addUserToDatabase("gHuthgYFv-AAAAC", "robert");
- * @param {string} socketID 
- * @param {string} username 
- */
-function addUserToDatabase(socketID, username) {
-    usernames[socketID] = username;
+    
+        database.getUsers(database.USER_PROPERTIES.username, username, false).then(user => {
+            if(user !== undefined) {
+                return resolve(UsernameStatusCodes.taken);
+            }
+            
+            if(username == "") {
+                return resolve(UsernameStatusCodes.empty);
+            }
+        
+            return resolve(UsernameStatusCodes.valid);
+        }).catch(err => {
+            reject(err);
+        });
+    });
 }

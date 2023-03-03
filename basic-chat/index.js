@@ -2,12 +2,15 @@ import {standardGetRequestListener, standardEJSgetRequestListener, standardRedir
 import {processEJSfile, readFile} from "./fileManagement.js";
 import {readRequestBody, sendUnsuccessfulResponse} from "./requestAndResponseUtils.js";
 import socketio from "socket.io";
-import http, { Server } from "http";
+import http from "http";
 import {checkUsername, UsernameStatusCodes, UsernameStatusCodeMessages} from "./usernameManagement.js";
 import querystring from "querystring";
-import {usernames, chatHistory} from "./dataManagement.js";
-import readline from "readline/promises";
-import {stdin, stdout} from "process";
+import * as database from "./database.js";
+import readline from "readline";
+// import {stdin, stdout} from "process";
+import repl from "repl";
+
+
 
 /**
  * the request listeners for every valid METHOD and URL (acess requestListeners[`${METHOD} ${URL}`] to get the appropriate request listener)
@@ -17,7 +20,7 @@ import {stdin, stdout} from "process";
  * @const {Object} requestListeners
  * @default
  */
-const requestListeners = Object.freeze({
+const requestListeners = {
     "GET /login": standardEJSgetRequestListener("public/login.ejs"),
     "GET /index.js": standardGetRequestListener("public/index.js"),
     "GET /message.js": standardGetRequestListener("public/message.js"),
@@ -49,8 +52,7 @@ const requestListeners = Object.freeze({
             return;
         }
         
-        
-        let usernameStatus = checkUsername(query.username);
+        let usernameStatus = await checkUsername(query.username);
         res.setHeader("content-type", "application/json");
         if(usernameStatus == UsernameStatusCodes.valid) {
             res.end(`{"valid": true}`);
@@ -58,58 +60,68 @@ const requestListeners = Object.freeze({
             res.end(`{"valid": false, "message": "${UsernameStatusCodeMessages[usernameStatus]}"}`);
         }
     }
-});
+};
 
 
-/**
- * http server
- * @const {Server} server
- */
 const server = http.createServer(async (req, res) => {
-    let [url, queryString] = req.url.split('?');
-    let query = querystring.parse(queryString);
+    try {
+        let [url, queryString] = req.url.split('?');
+        let query = querystring.parse(queryString);
 
-    if(!requestListeners[`${req.method} ${url}`]) {
-        sendUnsuccessfulResponse(res, 404);
+        if(!requestListeners[`${req.method} ${url}`]) {
+            sendUnsuccessfulResponse(res, 404);
+        }
+        
+        requestListeners[`${req.method} ${url}`](req, res, query);
+    } catch(error) {
+        try {
+            console.log("Error while responding to the client:");
+            console.error(error);
+            sendUnsuccessfulResponse(res, 500);
+        } catch(veryBadError) {
+            console.log("Error while sending unsuccessful response code 500:");
+            console.error(veryBadError);
+            res.setHeader("content-type", "text/html");
+            res.end("<h2>Sorry, a severe internal error happened. If the error persists try again tomorrow or something like that lol</h2>");
+        }
     }
-    
-    requestListeners[`${req.method} ${url}`](req, res, query);
 });
 
 
-/** @type {Server} websockets server */
 const sockets = socketio(server);
 
 sockets.on("connection", socket => {
+    let user;
     socket.on("username", username => {
-        usernames[socket.id] = username;
+        user = {socketID: socket.id, username: username};
+        database.addUser(username);
     });
 
+    getMessages().then(messages => {
+        for(let i = 0;i < messages.length;i++) {
+            messages[i] = {
+                text: messages[i].text,
+                user: messages[i].userID
+            };
+        }
+    }).catch((err) => {
+        
+    });
     socket.emit("chat history", chatHistory);
 
     socket.on("new message", messageText => {
-        /** @type {import("./public/message.js").Message} */
-        let message = {};
-        message.text = messageText.trim();
-        message.user = usernames[socket.id];
-        message.time = new Date().getTime();
+        let text = messageText.trim();
+        let time = new Date().getTime();
 
-        chatHistory.push(message);
+        database.addMessage({
+            text: messageText.trim(),
+            userID: user.socketID,
+            time: time
+        });
         sockets.emit("new message", message);
     });
 });
 
-
 server.listen(3000, async () => {
     console.log("server listening on port 3000");
-    const rl = readline.createInterface({input: stdin, output: stdout});
-    while(true) {
-        const answer = await rl.question("> ");
-        try {
-            const output = (() => eval(answer))();
-            console.log(output);
-        } catch(error) {
-            console.error(error);
-        }
-    }
 });
